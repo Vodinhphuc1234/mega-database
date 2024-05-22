@@ -1,19 +1,16 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import * as yup from 'yup';
 import useStore from '@/store';
-import { Link } from 'react-router-dom';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { useState } from 'react';
 import { useSnackbar } from 'notistack';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
-import useGoogleLogin from '@/hooks/use-google-login';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { yupResolver } from '@hookform/resolvers/yup';
-import { login } from '@/api/normal-apis/authentication/auth-apis';
+import { renewPassword } from '@/api/normal-apis/authentication/auth-apis';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -28,15 +25,14 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-const schema = yup
-  .object()
-  .shape({
-    username: yup.string().required('Username is required'),
-    password: yup.string().required('Password is required'),
-  })
-  .required();
+export default function ForgotPasswordView() {
+  const schema = yup
+    .object({
+      username: yup.string().required('Username is required'),
+      password: yup.string().required('New password is required'),
+    })
+    .required();
 
-export default function LoginView() {
   const {
     register,
     handleSubmit,
@@ -44,34 +40,13 @@ export default function LoginView() {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const theme = useTheme();
-
-  const [showPassword, setShowPassword] = useState(false);
-
-  const { enqueueSnackbar } = useSnackbar();
-
-  const setProfile = useStore((state) => state.setProfile);
   const setLoading = useStore((state) => state.setLoading);
-
-  const handleSuccessLogin = (loginRet) => {
-    if (!loginRet?.token?.access_token || !loginRet?.token?.refresh_token) {
-      enqueueSnackbar('Token is not foud !!!', { variant: 'error' });
-    } else if (!loginRet?.profile) {
-      enqueueSnackbar('User is not found !!!', { variant: 'error' });
-    } else {
-      enqueueSnackbar('Login successfully', { variant: 'success' });
-      localStorage.setItem('access_token', loginRet.token.access_token);
-      localStorage.setItem('refresh_token', loginRet.token.refresh_token);
-      setProfile(loginRet.profile);
-    }
-  };
-
+  const { enqueueSnackbar } = useSnackbar();
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await login(data);
-      const loginRet = response?.data?.data;
-      handleSuccessLogin(loginRet);
+      await renewPassword(data);
+      enqueueSnackbar('Reset password successfully, check your mail box.', { variant: 'success' });
     } catch (error) {
       enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
     } finally {
@@ -79,31 +54,18 @@ export default function LoginView() {
     }
   };
 
-  const { handleGoogle } = useGoogleLogin((loginRet) => {
-    handleSuccessLogin(loginRet);
-  });
-
-  useEffect(() => {
-    /* global google */
-    if (window.google) {
-      google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        callback: handleGoogle,
-      });
-
-      google.accounts.id.renderButton(document.getElementById('btnLoginGoogle'), {
-        scope: 'profile email',
-        width: 300,
-        height: 80,
-        longtitle: true,
-        theme: 'dark',
-      });
-    }
-  }, [handleGoogle]);
+  const theme = useTheme();
+  const [showPassword, setShowPassword] = useState(false);
 
   const renderForm = (
     <>
-      <Stack spacing={2}>
+      <Stack
+        spacing={2}
+        sx={{
+          marginTop: 2,
+          marginBottom: 2,
+        }}
+      >
         <TextField
           name="username"
           label="Username"
@@ -111,7 +73,6 @@ export default function LoginView() {
           error={!!errors.username}
         />
         <p className="text-red-600 text-sm">{errors.username?.message}</p>
-
         <TextField
           name="password"
           label="Password"
@@ -131,12 +92,6 @@ export default function LoginView() {
         <p className="text-red-600 text-sm">{errors.password?.message}</p>
       </Stack>
 
-      <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ my: 3 }}>
-        <Link to="/forgot-password" className="cursor-pointer text-blue-600">
-          Forgot password?
-        </Link>
-      </Stack>
-
       <LoadingButton
         fullWidth
         size="large"
@@ -145,7 +100,7 @@ export default function LoginView() {
         color="inherit"
         onClick={handleSubmit(onSubmit)}
       >
-        Login
+        Submit
       </LoadingButton>
     </>
   );
@@ -176,23 +131,7 @@ export default function LoginView() {
             maxWidth: 420,
           }}
         >
-          <Typography variant="h4">Sign in to Minimal</Typography>
-
-          <Typography variant="body2" sx={{ mt: 2, mb: 5 }}>
-            Don’t have an account?
-            <Link to="/register" className="cursor-pointer text-blue-600">
-              Get started
-            </Link>
-          </Typography>
-
-          <Button className="w-full" id="btnLoginGoogle" />
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              OR
-            </Typography>
-          </Divider>
-
+          <Typography variant="h4">Forgot password</Typography>
           {renderForm}
         </Card>
       </Stack>

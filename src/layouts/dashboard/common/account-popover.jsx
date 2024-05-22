@@ -1,3 +1,4 @@
+import useStore from '@/store';
 import { useState } from 'react';
 
 import Box from '@mui/material/Box';
@@ -32,6 +33,7 @@ const MENU_OPTIONS = [
 
 export default function AccountPopover() {
   const [open, setOpen] = useState(null);
+  const logout = useStore((state) => state.logout);
 
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
@@ -105,7 +107,7 @@ export default function AccountPopover() {
         <MenuItem
           disableRipple
           disableTouchRipple
-          onClick={handleClose}
+          onClick={logout}
           sx={{ typography: 'body2', color: 'error.main', py: 1.5 }}
         >
           Logout

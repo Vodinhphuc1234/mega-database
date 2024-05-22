@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { SnackbarProvider } from 'notistack';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -13,7 +15,16 @@ root.render(
   <HelmetProvider>
     <BrowserRouter>
       <Suspense>
-        <App />
+        <SnackbarProvider
+          maxSnack={3}
+          autoHideDuration={3000}
+          anchorOrigin={{
+            horizontal: 'center',
+            vertical: 'top',
+          }}
+        >
+          <App />
+        </SnackbarProvider>
       </Suspense>
     </BrowserRouter>
   </HelmetProvider>
